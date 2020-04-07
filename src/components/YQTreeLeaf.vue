@@ -1,20 +1,30 @@
 <template>
-  <div class="yq-tree-selector">
-    <YQTreeLeaf v-for="(item, i) in data" :data="item" id-key="id" :key="i" :level="0"></YQTreeLeaf>
+  <div>
+    <ul>    
+        <li>
+            <span v-bind:style="{ 'margin-left':offset*level +'px'}" class="yq-tree-s-flag">
+            <img v-if="data.selected" class="yq-tree-s-flag-img"  src="../assets/yq-tree-circle-selected.png">
+            <img v-else  class="yq-tree-s-flag-img" src="../assets/yq-tree-circle-normal.png">
+            </span>
+            <span class="yq-tree-s-title">{{data.title}}</span>
+            <span class="yq-tree-s-arrow" v-on:click="expandCell">
+                <template v-if="data.hasChild">
+                <img v-if="data.expand" class="yq-tree-s-arrow-img"  src="../assets/yq-tree-arrow-down.png">
+                <img v-else class="yq-tree-s-arrow-img" src="../assets/yq-tree-arrow-right.png">
+                </template>
+            </span>
+        </li>
+    </ul>
+    <YQTreeLeaf v-if="data.expand && data.hasChild" v-for="(item, i) in data.children" :data="item" :id-key="idKey" :key="i" :level="level+1"></YQTreeLeaf>
   </div>
 </template>
 
 <script>
-import YQTreeLeaf from './YQTreeLeaf'
-
 export default {
-  name: 'YQTreeSelector',
-  components: {
-    YQTreeLeaf
-  },
+  name: 'YQTreeLeaf',
   props: {
     data: {
-        typle: Array,
+        typle: Object,
         required: true,
     },
     leafStyle: {
@@ -24,13 +34,13 @@ export default {
             return ["step", "number"].indexOf(value) !== -1
         }
     },
-    level: {
-      type: Number,
-      default: 0
-    },
     offset: {
-      type: Number,
-      default: 30,
+        type: Number,
+        default: 30,
+    },
+    level: {
+        type: Number,
+        default: 0,
     },
     idKey: {
       type: String,
@@ -73,13 +83,13 @@ export default {
       })
       return array
     },
-    expandCell(item) {
-      if (item.hasChild) {
-        if ( item.children && item.children.length) {
-          if (item.expand) {
-            item.expand = false
+    expandCell() {
+      if (this.data.hasChild) {
+        if ( this.data.children && this.data.children.length) {
+          if (this.data.expand) {
+            this.data.expand = false
           } else {
-            item.expand = true
+            this.data.expand = true
           }
         } else {
           console.error("当前cell没有提供子节点数据")
@@ -88,28 +98,21 @@ export default {
         console.error("没有子节点")
       }
     },
-    clickCell(item) {
-      console.log(item)
+    clickCell() {
       if (this.loadData) {
         //TODO:如果没有数据先去下载
       } else {
-        if (!item.hasChild) {
-          if (item.isSelected) {
-            item.isSelected = false
+        if (!this.data.hasChild) {
+          if (this.data.isSelected) {
+            this.data.isSelected = false
           } else {
-            item.isSelected = true
+            this.data.isSelected = true
           }
         } else {
           
         }
       }
-    },
-    selectChange: (item) => {
-
-    }
-  },
-  mounted() {
-
+    }, 
   }
 
 }

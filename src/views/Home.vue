@@ -11,6 +11,7 @@
 // @ is an alias to /src
 import HelloWorld from '@/components/HelloWorld.vue'
 import YQTreeSelector from '@/components/YQTreeSelector.vue'
+
 export default {
   name: 'Home',
   components: {
@@ -54,18 +55,21 @@ export default {
           expand: true,
           children: [
             {
-              id: i+i * 23,
+              id: i+i * 283,
               title: "e",
               hasChild: false,
-              expand: true
+              expand: true,
+              isSelected: false
+
             }
           ]
         }]
       }
       let child1 = {
-        id: i*101,
+        id: i*201,
         title: "c",
-        hasChild: false
+        hasChild: false,
+        isSelected: false
       }
       item.children = [child, child1]
       array.push(item)
