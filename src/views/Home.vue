@@ -2,7 +2,7 @@
   <div class="home">
     <img alt="Vue logo" src="../assets/logo.png">
     <button v-on:click="click"/>
-    <YQTreeSelector :data="tree" id-key="id"/>
+    <YQTreeSelector :data="tree" id-key="id" :load-data="loadData"/>
     
   </div>
 </template>
@@ -32,6 +32,21 @@ export default {
     click() {      
       this.tree[0].title = Math.random() + ""
       console.log(this.tree)
+    },
+    loadData(item, callback) {
+      setTimeout(() => {
+        callback([{
+              id: 2853,
+              title: "f",
+              hasChild: false,
+              expand: true,
+            },{
+              id: 2813,
+              title: "f",
+              hasChild: false,
+              expand: true,
+            }])
+      }, 1000 * 5);
     }
   },
   mounted() {
@@ -41,7 +56,8 @@ export default {
         id: i,
         title: "a",
         hasChild: true,
-        expand: true
+        expand: true,
+        selected: false
       }
       let child = {
         id: i*100,
@@ -59,8 +75,6 @@ export default {
               title: "e",
               hasChild: false,
               expand: true,
-              isSelected: false
-
             }
           ]
         }]
@@ -68,8 +82,9 @@ export default {
       let child1 = {
         id: i*201,
         title: "c",
-        hasChild: false,
-        isSelected: false
+        hasChild: true,
+        selected: false,
+        expand: true
       }
       item.children = [child, child1]
       array.push(item)

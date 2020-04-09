@@ -1,28 +1,35 @@
 <template>
   <div class="yq-tree-selector">
-    <YQTreeLeaf v-for="(item, i) in data" :data="item" id-key="id" :key="i" :level="0"></YQTreeLeaf>
+    <YQTreeLeaf
+      v-for="(item, i) in treeData"
+      :data="item"
+      id-key="id"
+      :key="i"
+      :level="0"
+      :load-data="loadData"
+    ></YQTreeLeaf>
   </div>
 </template>
 
 <script>
-import YQTreeLeaf from './YQTreeLeaf'
+import YQTreeLeaf from "./YQTreeLeaf";
 
 export default {
-  name: 'YQTreeSelector',
+  name: "YQTreeSelector",
   components: {
     YQTreeLeaf
   },
   props: {
     data: {
-        typle: Array,
-        required: true,
+      typle: Array,
+      required: true
     },
     leafStyle: {
-        typle: String,
-        default: "step",
-        validator: function(value) {
-            return ["step", "number"].indexOf(value) !== -1
-        }
+      typle: String,
+      default: "step",
+      validator: function(value) {
+        return ["step", "number"].indexOf(value) !== -1;
+      }
     },
     level: {
       type: Number,
@@ -30,137 +37,169 @@ export default {
     },
     offset: {
       type: Number,
-      default: 30,
+      default: 30
     },
     idKey: {
       type: String,
       default: "id"
     },
     loadData: {
-        typle: Function,
+      typle: Function
     }
   },
   data: function() {
-      return {
-          treeData: [],
-          treeInfo: []
-      }
+    return {
+      treeData: this.data,
+      leavesInfo: []
+    };
   },
   watch: {
-    data() {
-      this.treeData = this.data
-      this.treeInfo = this.indexTreeData()
+    data: {
+      deep: false,
+      handler() {
+        this.treeData = this.data;
+        this.flatTree = this.indexTreeData();
+        console.log("didi");
+      }
     }
   },
-  computed: {
-    
-  },
+  computed: {},
   methods: {
     indexTreeData() {
-      let index = 0
-
-    },
-    dataToRows(value, level, parent) {
-      let array =  []
-      value.forEach(element => {
-        element.yq_tree_s_level = level
-        array.push(element)
-        if (element.expand && element.hasChild && element.children) {
-          this.dataToRows(element.children, level + 1).forEach( element => {
-            array.push(element)
-          })
+      let index = 0;
+      const items = [];
+      function flattenLeaves(leaf, i, level, parent) {
+        leaf.yq_tree_index = index++;
+        let node = { leaf: leaf, index: leaf.yq_tree_index, level: level };
+        items[leaf.yq_tree_index] = node;
+        if (parent) {
+          console.log("parent", parent);
+          node.parent = parent.leaf.yq_tree_index;
+          node.position = parent.position.concat([i]);
+        } else {
+          node.position = [i];
         }
-      })
-      return array
-    },
-    expandCell(item) {
-      if (item.hasChild) {
-        if ( item.children && item.children.length) {
-          if (item.expand) {
-            item.expand = false
+        if (leaf.hasChild) {
+          if (leaf.children && leaf.children.length > 0) {
+            leaf.children.forEach((element, i) => {
+              flattenLeaves(element, i, level + 1, node);
+            });
+            node.expanded = leaf.children.every(element => {
+              return items[element.yq_tree_index].expanded;
+            });
+            let descendant = 1;
+            leaf.children.forEach(element => {
+              descendant = descendant + items[element.yq_tree_index].descendant;
+            });
+            node.descendant = descendant;
           } else {
-            item.expand = true
+            node.expanded = false;
+            node.descendant = 1;
           }
         } else {
-          console.error("当前cell没有提供子节点数据")
+          node.expanded = true;
+          node.descendant = 1;
         }
-      } else {
-        console.error("没有子节点")
       }
+      this.treeData.forEach((element, i) => {
+        flattenLeaves(element, i, 0);
+      });
+      items.forEach(element => {
+        console.log(element.index, element.expanded, element.descendant);
+      });
+      return items;
     },
-    clickCell(item) {
-      console.log(item)
-      if (this.loadData) {
-        //TODO:如果没有数据先去下载
-      } else {
-        if (!item.hasChild) {
-          if (item.isSelected) {
-            item.isSelected = false
+
+    handleSelect(value) {
+      let leafInfo = this.flatTree[value.yq_tree_index];
+      if (!leafInfo) {
+        return;
+      }
+      let leaf = leafInfo.leaf;
+      if (leaf.selected) {
+        if (leaf.hasChild) {
+          //可以
+          if (leafInfo.expanded) {
+            //选中所有孩子
+            for (
+              let i = leafInfo.index;
+              i < leafInfo.index + leafInfo.descendant;
+              i++
+            ) {
+              let item = this.flatTree[i].leaf;
+              this.$set(item, "selected", false);
+            }
           } else {
-            item.isSelected = true
+            let err = "当前节点未加载完数据";
+            console.error(err);
+            this.$emit("on-error", err);
           }
         } else {
-          
+          //选中然后往上
+          this.$set(leaf, "selected", false);
+          //TODO:往上
+        }
+      } else {
+        //先去校验数据是否都加载
+        if (leaf.hasChild) {
+          //可以
+          if (leafInfo.expanded) {
+            //选中所有孩子
+            for (
+              let i = leafInfo.index;
+              i < leafInfo.index + leafInfo.descendant;
+              i++
+            ) {
+              let item = this.flatTree[i].leaf;
+              this.$set(item, "selected", true);
+            }
+          } else {
+            let err = "当前节点未加载完数据";
+            console.error(err);
+            this.$emit("on-error", err);
+          }
+        } else {
+          //选中然后往上
+          this.$set(leaf, "selected", true);
+          //TODO:往上
+        }
+      }
+      if (leaf.hasChild) {
+      } else {
+        if (leaf.parent) {
         }
       }
     },
-    selectChange: (item) => {
-
+    handleExpand(value) {
+      let leafInfo = this.flatTree[value.yq_tree_index];
+      if (!leafInfo) {
+        return;
+      }
+      let leaf = leafInfo.leaf;
+      if (leaf.expand) {
+        this.$set(leaf, "expand", false);
+      } else {
+        this.$set(leaf, "expand", true);
+      }
     }
   },
+
+  created() {
+    this.treeData = this.data;
+    this.flatTree = this.indexTreeData();
+  },
+
   mounted() {
-
+    this.$on("on-selected", this.handleSelect);
+    this.$on("on-expanded", this.handleExpand);
+    this.$on("children-changed", function(item) {
+      this.treeData = this.data;
+      this.flatTree = this.indexTreeData();
+    });
   }
-
-}
+};
 </script>
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped>
-ul {
-  list-style-type: none;
-  padding: 0;
-}
-li {
-  /* display: inline-block; */
-  height: 44px;
-  display: flex;
-  background-color: bisque;
-  border-bottom: 1px silver solid;
-  justify-content: space-between;
-  align-items: center;
-  padding: 0% 12px;
-  /* flex-direction: row; */
-}
-
-.flip-list-enter-active, .flip-list-leave-active {
-  transition: opacity .3s ease;
-}
-.yq-tree-s-flag-img {
-  width: 20px;
-  height: 20px;
-}
-.yq-tree-s-arrow-img {
-  width: 30px;
-  height: 30px;
-}
-.yq-tree-s-flag {
-  display: flex;
-  max-width: 20px;
-  max-height: 20px;
-  
-}
-.yq-tree-s-title {
-  margin-left: 8px;
-  display: flex;
-  flex-grow: 1;
-  text-align: left;
-}
-.yq-tree-s-arrow {
-  margin-left: 8px;
-  display: flex;
-  max-width: 30px;
-  max-height: 30px;
-}
-
 </style>

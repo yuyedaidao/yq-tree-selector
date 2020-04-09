@@ -1,134 +1,156 @@
 <template>
-  <div>
-    <ul>    
-        <li>
-            <span v-bind:style="{ 'margin-left':offset*level +'px'}" class="yq-tree-s-flag">
-            <img v-if="data.selected" class="yq-tree-s-flag-img"  src="../assets/yq-tree-circle-selected.png">
-            <img v-else  class="yq-tree-s-flag-img" src="../assets/yq-tree-circle-normal.png">
-            </span>
-            <span class="yq-tree-s-title">{{data.title}}</span>
-            <span class="yq-tree-s-arrow" v-on:click="expandCell">
-                <template v-if="data.hasChild">
-                <img v-if="data.expand" class="yq-tree-s-arrow-img"  src="../assets/yq-tree-arrow-down.png">
-                <img v-else class="yq-tree-s-arrow-img" src="../assets/yq-tree-arrow-right.png">
-                </template>
-            </span>
-        </li>
-    </ul>
-    <YQTreeLeaf v-if="data.expand && data.hasChild" v-for="(item, i) in data.children" :data="item" :id-key="idKey" :key="i" :level="level+1"></YQTreeLeaf>
+  <div class="yq-tree-cell">
+    <div class="yq-tree-cell-item" v-on:click="clickCell">
+      <span v-bind:style="{ 'margin-left':offset*level +'px'}" class="yq-tree-s-flag">
+        <Icon v-if="isSelected" type="ios-checkmark-circle" />
+        <Icon v-else type="ios-checkmark-circle-outline" />
+      </span>
+      <span class="yq-tree-s-title">{{data.title}}</span>
+      <span v-if="data.loading">
+        <Spin></Spin>
+      </span>
+      <span v-else-if="data.hasChild" class="yq-tree-s-arrow" v-on:click.stop="expandCell">
+        <Icon v-if="data.expand" type="ios-arrow-down" />
+        <Icon v-else type="ios-arrow-forward" />
+      </span>
+    </div>
+    <YQTreeLeaf
+      v-if="shouldShowLeaves"
+      v-for="(item, i) in data.children"
+      :data="item"
+      :id-key="idKey"
+      :key="i"
+      :level="level+1"
+      :load-data="loadData"
+    ></YQTreeLeaf>
   </div>
 </template>
 
 <script>
+import "iview/dist/styles/iview.css";
+import { Icon, Spin } from "iview";
 export default {
-  name: 'YQTreeLeaf',
+  name: "YQTreeLeaf",
+  components: {
+    Icon,
+    Spin
+  },
   props: {
     data: {
-        typle: Object,
-        required: true,
+      typle: Object,
+      required: true
     },
     leafStyle: {
-        typle: String,
-        default: "step",
-        validator: function(value) {
-            return ["step", "number"].indexOf(value) !== -1
-        }
+      typle: String,
+      default: "step",
+      validator: function(value) {
+        return ["step", "number"].indexOf(value) !== -1;
+      }
     },
     offset: {
-        type: Number,
-        default: 30,
+      type: Number,
+      default: 30
     },
     level: {
-        type: Number,
-        default: 0,
+      type: Number,
+      default: 0
     },
     idKey: {
       type: String,
       default: "id"
     },
     loadData: {
-        typle: Function,
+      typle: Function
     }
   },
   data: function() {
-      return {
-          treeData: [],
-          treeInfo: []
-      }
+    return {};
   },
-  watch: {
-    data() {
-      this.treeData = this.data
-      this.treeInfo = this.indexTreeData()
+  watch: {},
+  computed: {
+    isSelected() {
+      return "selected" in this.data && this.data.selected;
+    },
+    shouldShowLeaves() {
+      return this.data.expand && this.data.hasChild;
     }
   },
-  computed: {
-    
-  },
   methods: {
-    indexTreeData() {
-      let index = 0
-
-    },
-    dataToRows(value, level, parent) {
-      let array =  []
-      value.forEach(element => {
-        element.yq_tree_s_level = level
-        array.push(element)
-        if (element.expand && element.hasChild && element.children) {
-          this.dataToRows(element.children, level + 1).forEach( element => {
-            array.push(element)
-          })
-        }
-      })
-      return array
-    },
+    
     expandCell() {
       if (this.data.hasChild) {
-        if ( this.data.children && this.data.children.length) {
-          if (this.data.expand) {
-            this.data.expand = false
-          } else {
-            this.data.expand = true
-          }
+        if (this.data.children && this.data.children.length) {
+          this.dispatch("on-expanded", this.data);
         } else {
-          console.error("当前cell没有提供子节点数据")
+          if (this.loadData) {
+            this.loadLeaves();
+          } else {
+            console.error("数据错误，请提供loadData方法或修正hasChild属性");
+          }
         }
       } else {
-        console.error("没有子节点")
+        console.error("没有子节点");
       }
     },
     clickCell() {
-      if (this.loadData) {
-        //TODO:如果没有数据先去下载
-      } else {
-        if (!this.data.hasChild) {
-          if (this.data.isSelected) {
-            this.data.isSelected = false
-          } else {
-            this.data.isSelected = true
-          }
+      if (this.data.hasChild) {
+        if (this.data.children && this.data.children.length > 0) {
+          //TODO:选中或取消相关
+          this.dispatch("on-selected", this.data);
         } else {
-          
+          if (this.loadData) {
+            this.loadLeaves();
+          } else {
+            console.error("数据错误，请提供loadData方法或修正hasChild属性");
+          }
         }
+      } else {
+        this.dispatch("on-selected", this.data);
       }
-    }, 
+    },
+    loadLeaves() {
+      if (this.data.loading) {
+        return
+      }
+      this.$set(this.data, "loading", true);
+      if (this.loadData) {
+        this.loadData(this.data, children => {
+          this.$set(this.data, "loading", false);
+          this.$set(this.data, "children", children);
+          this.dispatch('children-changed', this.data)
+        });
+      } else {
+        console.error("请提供loadData方法或修正hasChild属性");
+      }
+    },
+    dispatch(event, params) {
+      let target = 'YQTreeSelector'
+      let parent = this.$parent 
+      let name = parent.$options.name
+     
+      while(parent && (name !== target) ) {
+        parent = parent.$parent
+        name = parent.$options.name
+      }
+      if (parent) {
+        parent.$emit.apply(parent, [event].concat(params));
+      }
+    }
   }
-
-}
+};
 </script>
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped>
-ul {
+.yq-tree-cell {
   list-style-type: none;
   padding: 0;
 }
-li {
+.yq-tree-cell-item {
   /* display: inline-block; */
   height: 44px;
   display: flex;
-  background-color: bisque;
+  /* background-color: bisque; */
   border-bottom: 1px silver solid;
   justify-content: space-between;
   align-items: center;
@@ -136,34 +158,10 @@ li {
   /* flex-direction: row; */
 }
 
-.flip-list-enter-active, .flip-list-leave-active {
-  transition: opacity .3s ease;
-}
-.yq-tree-s-flag-img {
-  width: 20px;
-  height: 20px;
-}
-.yq-tree-s-arrow-img {
-  width: 30px;
-  height: 30px;
-}
-.yq-tree-s-flag {
-  display: flex;
-  max-width: 20px;
-  max-height: 20px;
-  
-}
 .yq-tree-s-title {
   margin-left: 8px;
   display: flex;
   flex-grow: 1;
   text-align: left;
 }
-.yq-tree-s-arrow {
-  margin-left: 8px;
-  display: flex;
-  max-width: 30px;
-  max-height: 30px;
-}
-
 </style>
