@@ -114,9 +114,6 @@ export default {
       data.forEach((element, i) => {
         flattenLeaves(element, i, 0);
       });
-      // items.forEach(element => {
-      //   console.log(element.index, element.expanded, element.descendant);
-      // });
       return items;
     },
 
