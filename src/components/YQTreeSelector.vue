@@ -7,6 +7,8 @@
       :key="i"
       :level="0"
       :load-data="loadData"
+      :leaf-style="leafStyle"
+      :leaf-info="leafInfo"
     ></YQTreeLeaf>
   </div>
 </template>
@@ -45,11 +47,14 @@ export default {
     },
     loadData: {
       typle: Function
+    },
+    onSelectChanged: {
+      typle: Function
     }
   },
   data: function() {
     return {
-      treeData: this.data,
+      treeData: [],
       leavesInfo: []
     };
   },
@@ -57,15 +62,20 @@ export default {
     data: {
       deep: false,
       handler() {
-        this.treeData = this.data;
-        this.flatTree = this.indexTreeData();
-        console.log("didi");
+        this.resetData();
       }
     }
   },
   computed: {},
   methods: {
-    indexTreeData() {
+    resetData() {
+      this.flatTree = this.indexTreeData(this.data);
+      this.treeData = this.data;
+    },
+    leafInfo(index) {
+      return this.flatTree[index];
+    },
+    indexTreeData(data) {
       let index = 0;
       const items = [];
       function flattenLeaves(leaf, i, level, parent) {
@@ -73,7 +83,6 @@ export default {
         let node = { leaf: leaf, index: leaf.yq_tree_index, level: level };
         items[leaf.yq_tree_index] = node;
         if (parent) {
-          console.log("parent", parent);
           node.parent = parent.leaf.yq_tree_index;
           node.position = parent.position.concat([i]);
         } else {
@@ -84,6 +93,7 @@ export default {
             leaf.children.forEach((element, i) => {
               flattenLeaves(element, i, level + 1, node);
             });
+            //记录子节点是否已经全部加载
             node.expanded = leaf.children.every(element => {
               return items[element.yq_tree_index].expanded;
             });
@@ -101,12 +111,12 @@ export default {
           node.descendant = 1;
         }
       }
-      this.treeData.forEach((element, i) => {
+      data.forEach((element, i) => {
         flattenLeaves(element, i, 0);
       });
-      items.forEach(element => {
-        console.log(element.index, element.expanded, element.descendant);
-      });
+      // items.forEach(element => {
+      //   console.log(element.index, element.expanded, element.descendant);
+      // });
       return items;
     },
 
@@ -116,18 +126,17 @@ export default {
         return;
       }
       let leaf = leafInfo.leaf;
+      //TODO:优化代码 判断太复杂
       if (leaf.selected) {
         if (leaf.hasChild) {
           //可以
           if (leafInfo.expanded) {
             //选中所有孩子
-            for (
-              let i = leafInfo.index;
-              i < leafInfo.index + leafInfo.descendant;
-              i++
-            ) {
-              let item = this.flatTree[i].leaf;
-              this.$set(item, "selected", false);
+            this.selectInward(leaf.yq_tree_index, false);
+            //祖辈节点检查
+            this.selectOutward(leaf.yq_tree_index);
+            if (this.onSelectChanged) {
+              this.onSelectChanged(leaf);
             }
           } else {
             let err = "当前节点未加载完数据";
@@ -137,7 +146,10 @@ export default {
         } else {
           //选中然后往上
           this.$set(leaf, "selected", false);
-          //TODO:往上
+          this.selectOutward(leaf.yq_tree_index);
+          if (this.onSelectChanged) {
+            this.onSelectChanged(leaf);
+          }
         }
       } else {
         //先去校验数据是否都加载
@@ -145,13 +157,11 @@ export default {
           //可以
           if (leafInfo.expanded) {
             //选中所有孩子
-            for (
-              let i = leafInfo.index;
-              i < leafInfo.index + leafInfo.descendant;
-              i++
-            ) {
-              let item = this.flatTree[i].leaf;
-              this.$set(item, "selected", true);
+            this.selectInward(leaf.yq_tree_index, true);
+            //祖辈节点检查
+            this.selectOutward(leaf.yq_tree_index);
+            if (this.onSelectChanged) {
+              this.onSelectChanged(leaf);
             }
           } else {
             let err = "当前节点未加载完数据";
@@ -159,15 +169,42 @@ export default {
             this.$emit("on-error", err);
           }
         } else {
-          //选中然后往上
           this.$set(leaf, "selected", true);
-          //TODO:往上
+          this.selectOutward(leaf.yq_tree_index);
+          if (this.onSelectChanged) {
+            this.onSelectChanged(leaf);
+          }
         }
       }
-      if (leaf.hasChild) {
-      } else {
-        if (leaf.parent) {
+    },
+    selectInward(index, selected) {
+      const count = this.flatTree[index].descendant;
+      for (let i = index; i < index + count; i++) {
+        let item = this.flatTree[i].leaf;
+        this.$set(item, "selected", selected);
+      }
+    },
+    selectOutward(index) {
+      let parentIndex = this.flatTree[index].parent;
+      while (parentIndex > -1) {
+        let parentInfo = this.flatTree[parentIndex];
+        let parent = parentInfo.leaf;
+        let allSelected = true;
+        for (let i = 0; i < parent.children.length; i++) {
+          if (parent.children[i].selected) {
+            continue;
+          } else {
+            allSelected = false;
+            break;
+          }
         }
+        if (allSelected) {
+          this.$set(parent, "selected", true);
+        } else {
+          //MARK:这里其实可以优化一步，如果当前节点已经为选中了，那就没必要再去监测上一层了
+          this.$set(parent, "selected", false);
+        }
+        parentIndex = parentInfo.parent;
       }
     },
     handleExpand(value) {
@@ -181,20 +218,22 @@ export default {
       } else {
         this.$set(leaf, "expand", true);
       }
+    },
+    getSelectedNodes() {
+      return this.flatTree.filter(element => {
+        let leaf = element.leaf;
+        return leaf.selected && !leaf.hasChild;
+      }).map(element => element.leaf);
     }
   },
-
   created() {
-    this.treeData = this.data;
-    this.flatTree = this.indexTreeData();
+    this.resetData();
   },
-
   mounted() {
     this.$on("on-selected", this.handleSelect);
     this.$on("on-expanded", this.handleExpand);
     this.$on("children-changed", function(item) {
-      this.treeData = this.data;
-      this.flatTree = this.indexTreeData();
+      this.resetData();
     });
   }
 };

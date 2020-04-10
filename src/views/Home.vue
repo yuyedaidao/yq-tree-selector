@@ -2,7 +2,7 @@
   <div class="home">
     <img alt="Vue logo" src="../assets/logo.png">
     <button v-on:click="click"/>
-    <YQTreeSelector :data="tree" id-key="id" :load-data="loadData"/>
+    <YQTreeSelector ref="tree" :data="tree" id-key="id" :load-data="loadData" leaf-style="number" :on-select-changed="onSelectChanged"/>
     
   </div>
 </template>
@@ -47,6 +47,9 @@ export default {
               expand: true,
             }])
       }, 1000 * 5);
+    },
+    onSelectChanged() {
+      console.log(this.$refs["tree"].getSelectedNodes())
     }
   },
   mounted() {

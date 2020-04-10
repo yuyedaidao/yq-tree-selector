@@ -1,18 +1,21 @@
 <template>
   <div class="yq-tree-cell">
-    <div class="yq-tree-cell-item" v-on:click="clickCell">
-      <span v-bind:style="{ 'margin-left':offset*level +'px'}" class="yq-tree-s-flag">
-        <Icon v-if="isSelected" type="ios-checkmark-circle" />
-        <Icon v-else type="ios-checkmark-circle-outline" />
-      </span>
-      <span class="yq-tree-s-title">{{data.title}}</span>
-      <span v-if="data.loading">
-        <Spin></Spin>
-      </span>
-      <span v-else-if="data.hasChild" class="yq-tree-s-arrow" v-on:click.stop="expandCell">
-        <Icon v-if="data.expand" type="ios-arrow-down" />
-        <Icon v-else type="ios-arrow-forward" />
-      </span>
+    <div v-on:click="clickCell">
+      <div v-if="leafStyle === 'number'" class="yq-tree-cell-number">{{leafNubmer}}</div>
+      <div class="yq-tree-cell-item">
+        <span v-bind:style="{ 'margin-left':leafOffset*level +'px'}" class="yq-tree-s-flag">
+          <Icon v-if="isSelected" type="ios-checkmark-circle" />
+          <Icon v-else type="ios-checkmark-circle-outline" />
+        </span>
+        <span class="yq-tree-s-title">{{data.title}}</span>
+        <span v-if="data.loading">
+          <Spin></Spin>
+        </span>
+        <span v-else-if="data.hasChild" class="yq-tree-s-arrow" v-on:click.stop="expandCell">
+          <Icon v-if="data.expand" type="ios-arrow-down" />
+          <Icon v-else type="ios-arrow-forward" />
+        </span>
+      </div>
     </div>
     <YQTreeLeaf
       v-if="shouldShowLeaves"
@@ -22,6 +25,8 @@
       :key="i"
       :level="level+1"
       :load-data="loadData"
+      :leaf-style="leafStyle"
+      :leaf-info="leafInfo"
     ></YQTreeLeaf>
   </div>
 </template>
@@ -61,10 +66,22 @@ export default {
     },
     loadData: {
       typle: Function
+    },
+    leafInfo: {
+      typle: Function
     }
   },
   data: function() {
-    return {};
+    return {
+      leafOffset: 0
+    };
+  },
+  created() {
+    if (this.leafStyle === "number") {
+      this.leafOffset = 0
+    } else {
+      this.leafOffset = this.offset
+    }
   },
   watch: {},
   computed: {
@@ -73,10 +90,19 @@ export default {
     },
     shouldShowLeaves() {
       return this.data.expand && this.data.hasChild;
+    },
+    leafNubmer() {
+      let info = this.leafInfo(this.data.yq_tree_index)
+      if(info) {
+        return info.position.map(element => {
+          return (element + 1) + ""
+        }).join("-")
+      } else {
+        return ""
+      }
     }
   },
   methods: {
-    
     expandCell() {
       if (this.data.hasChild) {
         if (this.data.children && this.data.children.length) {
@@ -95,7 +121,6 @@ export default {
     clickCell() {
       if (this.data.hasChild) {
         if (this.data.children && this.data.children.length > 0) {
-          //TODO:选中或取消相关
           this.dispatch("on-selected", this.data);
         } else {
           if (this.loadData) {
@@ -110,27 +135,27 @@ export default {
     },
     loadLeaves() {
       if (this.data.loading) {
-        return
+        return;
       }
       this.$set(this.data, "loading", true);
       if (this.loadData) {
         this.loadData(this.data, children => {
           this.$set(this.data, "loading", false);
           this.$set(this.data, "children", children);
-          this.dispatch('children-changed', this.data)
+          this.dispatch("children-changed", this.data);
         });
       } else {
         console.error("请提供loadData方法或修正hasChild属性");
       }
     },
     dispatch(event, params) {
-      let target = 'YQTreeSelector'
-      let parent = this.$parent 
-      let name = parent.$options.name
-     
-      while(parent && (name !== target) ) {
-        parent = parent.$parent
-        name = parent.$options.name
+      let target = "YQTreeSelector";
+      let parent = this.$parent;
+      let name = parent.$options.name;
+
+      while (parent && name !== target) {
+        parent = parent.$parent;
+        name = parent.$options.name;
       }
       if (parent) {
         parent.$emit.apply(parent, [event].concat(params));
@@ -145,6 +170,11 @@ export default {
 .yq-tree-cell {
   list-style-type: none;
   padding: 0;
+}
+.yq-tree-cell-number {
+  /* display: inline-block; */
+  display: flex;
+  padding: 0% 12px;
 }
 .yq-tree-cell-item {
   /* display: inline-block; */
