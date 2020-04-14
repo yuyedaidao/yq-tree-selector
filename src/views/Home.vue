@@ -1,21 +1,15 @@
 <template>
-  <div class="home">
-    <img alt="Vue logo" src="../assets/logo.png">
-    <button v-on:click="click"/>
+  <div>
     <YQTreeSelector ref="tree" :data="tree" id-key="id" :load-data="loadData" leaf-style="number" :on-select-changed="onSelectChanged"/>
-    
   </div>
 </template>
 
 <script>
-// @ is an alias to /src
-import HelloWorld from '@/components/HelloWorld.vue'
-import YQTreeSelector from '@/components/YQTreeSelector.vue'
+import YQTreeSelector from '@/index'
 
 export default {
   name: 'Home',
   components: {
-    HelloWorld,
     YQTreeSelector
   },
   data() {

@@ -111,9 +111,11 @@ export default {
           node.descendant = 1;
         }
       }
-      data.forEach((element, i) => {
-        flattenLeaves(element, i, 0);
-      });
+      if (data.length > 0) {
+        data.forEach((element, i) => {
+          flattenLeaves(element, i, 0);
+        });
+      }
       return items;
     },
 
