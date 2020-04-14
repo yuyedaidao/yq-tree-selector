@@ -11,7 +11,7 @@ module.exports = {
             filename: 'index.html',
         },
     },
-    productionSourceMap: true,
+    productionSourceMap: false,
     configureWebpack: {
         output: {
             libraryExport: 'default'
