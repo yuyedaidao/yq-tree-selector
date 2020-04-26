@@ -69,6 +69,7 @@ export default {
   computed: {},
   methods: {
     resetData() {
+      console.log('resetData', this.data)
       this.flatTree = this.indexTreeData(this.data);
       this.treeData = this.data;
     },
