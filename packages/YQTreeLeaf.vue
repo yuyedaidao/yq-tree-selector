@@ -4,16 +4,18 @@
       <div v-if="leafStyle === 'number'" class="yq-tree-cell-number">{{leafNubmer}}</div>
       <div class="yq-tree-cell-item">
         <span v-bind:style="{ 'margin-left':leafOffset*level +'px'}" class="yq-tree-s-flag">
-          <Icon v-if="isSelected" type="ios-checkmark-circle" />
-          <Icon v-else type="ios-checkmark-circle-outline" />
+          <img src="../src/assets/choosed.png" v-if="isSelected" class="chooseLogo">
+          <img src="../src/assets/noChoosed.png" v-else class="chooseLogo">
         </span>
         <span class="yq-tree-s-title">{{data.title}}</span>
         <span v-if="data.loading">
           <Spin></Spin>
         </span>
         <span v-else-if="data.hasChild" class="yq-tree-s-arrow" v-on:click.stop="expandCell">
-          <Icon v-if="data.expand" type="ios-arrow-down" />
-          <Icon v-else type="ios-arrow-forward" />
+          <!-- <Icon v-if="data.expand" type="ios-arrow-down" />
+          <Icon v-else type="ios-arrow-forward" /> -->
+          <img src="../src/assets/arrow_down.png" v-if="data.expand" class="arrow_logo"/>
+          <img src="../src/assets/arrow_forward.png" v-else class="arrow_logo"/>
         </span>
       </div>
     </div>
@@ -178,13 +180,14 @@ export default {
 }
 .yq-tree-cell-item {
   /* display: inline-block; */
-  height: 44px;
+  height: 55px;
   display: flex;
   /* background-color: bisque; */
-  border-bottom: 1px silver solid;
+  border-bottom: 1px solid #ECECEC;
   justify-content: space-between;
   align-items: center;
-  padding: 0% 12px;
+  padding: 0% 12px 0 0;
+  margin-left: 20px;
   /* flex-direction: row; */
 }
 
@@ -193,5 +196,13 @@ export default {
   display: flex;
   flex-grow: 1;
   text-align: left;
+}
+.chooseLogo{
+  width: 20px;
+  height: 20px;
+  margin-top: 4px;
+}
+.arrow_logo{
+  width: 15px;
 }
 </style>

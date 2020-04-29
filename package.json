@@ -28,7 +28,13 @@
   ],
   "main": "lib/yq-tree-selector.umd.min.js",
   "private": false,
-  "keywords": ["yq-tree-selector", "tree", "select", "selector", "tree-select"],
-  "author" : "yuyedaidao",
+  "keywords": [
+    "yq-tree-selector",
+    "tree",
+    "select",
+    "selector",
+    "tree-select"
+  ],
+  "author": "yuyedaidao",
   "description": "无限级树结构数据选择器"
 }

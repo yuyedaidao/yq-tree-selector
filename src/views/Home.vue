@@ -1,6 +1,14 @@
+<!--
+ * @Author: your name
+ * @Date: 2020-04-20 15:39:49
+ * @LastEditTime: 2020-04-26 10:21:15
+ * @LastEditors: Please set LastEditors
+ * @Description: In User Settings Edit
+ * @FilePath: \yq-tree-selector\src\views\Home.vue
+ -->
 <template>
   <div>
-    <YQTreeSelector ref="tree" :data="tree" id-key="id" :load-data="loadData" leaf-style="step" :on-select-changed="onSelectChanged"/>
+    <YQTreeSelector ref="tree" :data="tree" id-key="id" :load-data="loadData" :on-select-changed="onSelectChanged" @on-error='handleError'/>
   </div>
 </template>
 
@@ -28,6 +36,7 @@ export default {
       console.log(this.tree)
     },
     loadData(item, callback) {
+      console.log(item)
       setTimeout(() => {
         callback([{
               id: 2853,
@@ -40,10 +49,13 @@ export default {
               hasChild: false,
               expand: true,
             }])
-      }, 1000 * 5);
+      }, 1000 * 2.5);
     },
     onSelectChanged() {
       console.log(this.$refs["tree"].getSelectedNodes())
+    },
+    handleError(err) {
+      console.log('err+',err)
     }
   },
   mounted() {
