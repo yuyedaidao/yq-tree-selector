@@ -1,6 +1,6 @@
 <template>
   <div>
-    <YQTreeSelector ref="tree" :data="tree" id-key="id" :load-data="loadData" leaf-style="number" :on-select-changed="onSelectChanged"/>
+    <YQTreeSelector ref="tree" :data="tree" id-key="id" :load-data="loadData" leaf-style="step" :on-select-changed="onSelectChanged"/>
   </div>
 </template>
 
