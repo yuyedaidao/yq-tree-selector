@@ -9,6 +9,7 @@
       :load-data="loadData"
       :leaf-style="leafStyle"
       :leaf-info="leafInfo"
+      :offset='offset'
     ></YQTreeLeaf>
   </div>
 </template>
@@ -64,12 +65,11 @@ export default {
       handler() {
         this.resetData();
       }
-    }
+    },
   },
   computed: {},
   methods: {
     resetData() {
-      console.log('resetData', this.data)
       this.flatTree = this.indexTreeData(this.data);
       this.treeData = this.data;
     },
@@ -235,6 +235,7 @@ export default {
     this.$on("children-changed", function(item) {
       this.resetData();
     });
+    console.log(this.offset)
   }
 };
 </script>

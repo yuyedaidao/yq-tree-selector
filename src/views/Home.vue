@@ -1,14 +1,14 @@
 <!--
  * @Author: your name
  * @Date: 2020-04-20 15:39:49
- * @LastEditTime: 2020-04-26 10:21:15
+ * @LastEditTime: 2020-04-29 17:12:37
  * @LastEditors: Please set LastEditors
  * @Description: In User Settings Edit
  * @FilePath: \yq-tree-selector\src\views\Home.vue
  -->
 <template>
   <div>
-    <YQTreeSelector ref="tree" :data="tree" id-key="id" :load-data="loadData" :on-select-changed="onSelectChanged" @on-error='handleError'/>
+    <YQTreeSelector ref="tree" :data="tree" id-key="id" :load-data="loadData" :on-select-changed="onSelectChanged" @on-error='handleError' :offset='20'/>
   </div>
 </template>
 

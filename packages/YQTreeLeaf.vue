@@ -29,6 +29,7 @@
       :load-data="loadData"
       :leaf-style="leafStyle"
       :leaf-info="leafInfo"
+      :offset = offset
     ></YQTreeLeaf>
   </div>
 </template>
@@ -82,6 +83,8 @@ export default {
     if (this.leafStyle === "number") {
       this.leafOffset = 0
     } else {
+      console.log(this.data)
+      console.log(this.offset)
       this.leafOffset = this.offset
     }
   },
@@ -187,7 +190,6 @@ export default {
   justify-content: space-between;
   align-items: center;
   padding: 0% 12px 0 0;
-  margin-left: 20px;
   /* flex-direction: row; */
 }
 
@@ -200,7 +202,6 @@ export default {
 .chooseLogo{
   width: 20px;
   height: 20px;
-  margin-top: 4px;
 }
 .arrow_logo{
   width: 15px;
