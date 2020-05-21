@@ -3,7 +3,7 @@
     <YQTreeLeaf
       v-for="(item, i) in treeData"
       :data="item"
-      id-key="id"
+      :id-key="idKey"
       :key="i"
       :level="0"
       :load-data="loadData"

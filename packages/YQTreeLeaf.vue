@@ -83,8 +83,6 @@ export default {
     if (this.leafStyle === "number") {
       this.leafOffset = 0
     } else {
-      console.log(this.data)
-      console.log(this.offset)
       this.leafOffset = this.offset
     }
   },
